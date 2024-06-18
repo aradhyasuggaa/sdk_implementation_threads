@@ -4,12 +4,15 @@ import { generateId } from 'ai';
 import { createAI, createStreamableUI, createStreamableValue } from 'ai/rsc';
 import { OpenAI } from 'openai';
 import { ReactNode } from 'react';
-import { getWeatherReport } from './getWeatherReport';
+import { getWeatherReport } from './getWeather';
 import { Message } from './message';
+import { searchEmails } from './searchEmails';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  
 });
+
 
 export interface ClientMessage {
   id: string;
@@ -33,15 +36,16 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
   const runQueue = [];
 
   (async () => {
+    const userMessage = `json: ${question}`;
     if (THREAD_ID) {
       await openai.beta.threads.messages.create(THREAD_ID, {
         role: 'user',
-        content: question,
+        content: userMessage,
       });
 
       const run = await openai.beta.threads.runs.create(THREAD_ID, {
         assistant_id: ASSISTANT_ID,
-        
+        response_format: { "type": "json_object" },
 
         stream: true,
       });
@@ -50,10 +54,10 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
     } else {
       const run = await openai.beta.threads.createAndRun({
         assistant_id: ASSISTANT_ID,
-
+        response_format:{"type": "json_object"},
         stream: true,
         thread:{
-          messages: [{ role: 'user', content: question }] ,
+          messages: [{ role: 'user', content: userMessage }] ,
         },
       });
 
@@ -66,7 +70,8 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
       if (latestRun) {
         for await (const delta of latestRun.run) {
           const { data, event } = delta;
-
+          console.log('Event:', event); // Debugging log
+          console.log('Data:', data);   // Debugging log
           status.update(event);
 
           if (event === 'thread.created') {
@@ -82,6 +87,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
               }
             });
           } else if (event === 'thread.run.requires_action') {
+  
             if (data.required_action) {
               if (data.required_action.type === 'submit_tool_outputs') {
                 const { tool_calls } = data.required_action.submit_tool_outputs;
@@ -91,39 +97,45 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
                   const { id: toolCallId, function: fn } = tool_call;
                   const { name, arguments: args } = fn;
 
-                  if (name === 'get_weather_report') {
-                    const { location } = JSON.parse(args);
+                  if (name === 'search_emails') {
+                    const { query, has_attachments } = JSON.parse(args);
 
                     gui.append(
                       <div className="flex flex-row gap-2 items-center">
                         <div>
-                          Fetching weather report for: {location}
+                          Searching for emails: {query}, has_attachments:
+                          {has_attachments ? 'true' : 'false'}
                         </div>
                       </div>,
                     );
 
                     await new Promise(resolve => setTimeout(resolve, 2000));
 
-                    const weatherReport = await getWeatherReport(location);
+                    const fakeEmails = searchEmails({ query, has_attachments });
 
                     gui.append(
                       <div className="flex flex-col gap-2">
-                        <div className="p-2 bg-zinc-100 rounded-md flex flex-row gap-2 items-center justify-between">
-                          <div className="flex flex-row gap-2 items-center">
-                            <div>Location: {weatherReport.location.name}</div>
-                            <div>Temperature: {weatherReport.current.temp_c}°C</div>
-                            <div>Condition: {weatherReport.current.condition.text}</div>
+                        {fakeEmails.map(email => (
+                          <div
+                            key={email.id}
+                            className="p-2 bg-zinc-100 rounded-md flex flex-row gap-2 items-center justify-between"
+                          >
+                            <div className="flex flex-row gap-2 items-center">
+                              <div>{email.subject}</div>
+                            </div>
+                            <div className="text-zinc-500">{email.date}</div>
                           </div>
-                        </div>
+                        ))}
                       </div>,
                     );
 
                     tool_outputs.push({
                       tool_call_id: toolCallId,
-                      output: JSON.stringify(weatherReport),
+                      output: JSON.stringify(fakeEmails),
                     });
                   }
                 }
+              
 
                 const nextRun: any =
                   await openai.beta.threads.runs.submitToolOutputs(
