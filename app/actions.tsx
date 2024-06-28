@@ -9,6 +9,7 @@ import { Message } from './message';
 import { searchEmails } from './searchEmails';
 
 const openai = new OpenAI({
+  
   apiKey: process.env.OPENAI_API_KEY,
   
 });
@@ -45,7 +46,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
 
       const run = await openai.beta.threads.runs.create(THREAD_ID, {
         assistant_id: ASSISTANT_ID,
-        response_format: { "type": "json_object" },
+        response_format: { "type": "text" },
 
         stream: true,
       });
@@ -54,7 +55,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
     } else {
       const run = await openai.beta.threads.createAndRun({
         assistant_id: ASSISTANT_ID,
-        response_format:{"type": "json_object"},
+        response_format:{"type": "text"},
         stream: true,
         thread:{
           messages: [{ role: 'user', content: userMessage }] ,
@@ -135,7 +136,36 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
                       output: JSON.stringify(fakeEmails),
                     });
                   }
+                  else if (name === 'get_weather') {
+                    const  location  = JSON.parse(args) as  string;
+  
+                    gui.append(
+                      <div className="flex flex-row gap-2 items-center">
+                        <div>
+                          Searching for weather: {location},
+                         
+                        </div>
+                      </div>,
+                    );
+  
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+  
+                    const weather = getWeatherReport( location );
+  
+                    gui.append(
+                      <div className="flex flex-col gap-2">
+                       { weather}
+                      </div>,
+                    );
+  
+                    tool_outputs.push({
+                      tool_call_id: toolCallId,
+                      output: JSON.stringify(weather),
+                    });
+                  }
                 }
+                
+              
               
 
                 const nextRun: any =
