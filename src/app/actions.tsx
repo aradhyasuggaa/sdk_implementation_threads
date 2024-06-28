@@ -201,6 +201,25 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
                       tool_call_id: toolCallId,
                       output: JSON.stringify(statistics),
                     });
+                  } else if (name === "get_info") {
+                    const { action, params } = JSON.parse(args);
+                    let info;
+                    switch (action) {
+                      case "is_number_blocked":
+                        info = await getNRides(params);
+                        break;
+                      case "get_base_fare":
+                        info = await getTopNEarners(params);
+                        break;
+                      case "get_ids":
+                        info = await getNCancelledRides(params);
+                        break;
+                      case "get_details":
+                        info = await getFilteredDriver(params);
+                        break;
+                      default:
+                        info = { error: "Unknown action" };
+                    }
                   }
                 }
 
