@@ -1,5 +1,5 @@
 "use server";
-
+import { format } from "date-fns";
 import { generateId } from "ai";
 import { createAI, createStreamableUI, createStreamableValue } from "ai/rsc";
 import { OpenAI } from "openai";
@@ -8,6 +8,12 @@ import { getWeatherReport } from "./getWeather";
 import { Message } from "./message";
 import { searchEmails } from "./searchEmails";
 import { getUserId } from "./getUserId";
+import {
+  getNCancelledRides,
+  getNRides,
+  getTopNEarners,
+  getFilteredDriver,
+} from "./lib/functions";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -25,6 +31,8 @@ let THREAD_ID = "";
 let RUN_ID = "";
 
 export async function submitMessage(question: string): Promise<ClientMessage> {
+  const currentDate = format(new Date(), "yyyy-MM-dd");
+  const systemMessage = `{"role": "user", "content": {"currentDate": "${currentDate}"}}`;
   const status = createStreamableUI("thread.init");
   const textStream = createStreamableValue("");
   const textUIStream = createStreamableUI(
@@ -41,6 +49,10 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
         role: "user",
         content: userMessage,
       });
+      await openai.beta.threads.messages.create(THREAD_ID, {
+        role: "user",
+        content: systemMessage,
+      });
 
       const run = await openai.beta.threads.runs.create(THREAD_ID, {
         assistant_id: ASSISTANT_ID,
@@ -56,7 +68,10 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
         response_format: { type: "text" },
         stream: true,
         thread: {
-          messages: [{ role: "user", content: userMessage }],
+          messages: [
+            { role: "user", content: userMessage },
+            { role: "user", content: systemMessage },
+          ],
         },
       });
 
@@ -159,6 +174,32 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
                     tool_outputs.push({
                       tool_call_id: toolCallId,
                       output: JSON.stringify(userId),
+                    });
+                  } else if (name === "get_database_statistics") {
+                    const { entity, criteria } = JSON.parse(args);
+
+                    let statistics;
+
+                    switch (entity) {
+                      case "top_rides":
+                        statistics = await getNRides(criteria);
+                        break;
+                      case "top_earners":
+                        statistics = await getTopNEarners(criteria);
+                        break;
+                      case "cancelled_rides":
+                        statistics = await getNCancelledRides(criteria);
+                        break;
+                      case "drivers":
+                        statistics = await getFilteredDriver(criteria);
+                        break;
+                      default:
+                        statistics = { error: "Unknown entity" };
+                    }
+
+                    tool_outputs.push({
+                      tool_call_id: toolCallId,
+                      output: JSON.stringify(statistics),
                     });
                   }
                 }
