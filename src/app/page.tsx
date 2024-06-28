@@ -68,7 +68,7 @@ export default function Home() {
         </div>
       </div>
       <div>
-        <div className="p-12 w-10 h-10 ">
+        <div className="p-12">
           <div>
             {conversation.map((message, index) => (
               <div key={index}>

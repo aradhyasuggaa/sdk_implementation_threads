@@ -8,6 +8,7 @@ import { getWeatherReport } from "./getWeather";
 import { Message } from "./message";
 import { searchEmails } from "./searchEmails";
 import { getUserId } from "./getUserId";
+import { UserID } from "./components/userid-component";
 import {
   getNCancelledRides,
   getNRides,
@@ -170,7 +171,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
                   } else if (name === "get_user_id") {
                     const { query, type } = JSON.parse(args);
                     const userId = await getUserId({ query, type });
-
+                    gui.update(<UserID userId={userId} />);
                     tool_outputs.push({
                       tool_call_id: toolCallId,
                       output: JSON.stringify(userId),
@@ -206,16 +207,16 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
                     let info;
                     switch (action) {
                       case "is_number_blocked":
-                        info = await getNRides(params);
+                        info = await getNRides(params); //TODO: change this
                         break;
                       case "get_base_fare":
-                        info = await getTopNEarners(params);
+                        info = await getTopNEarners(params); //TODO: change this
                         break;
                       case "get_ids":
-                        info = await getNCancelledRides(params);
+                        info = await getNCancelledRides(params); //TODO: change this
                         break;
                       case "get_details":
-                        info = await getFilteredDriver(params);
+                        info = await getFilteredDriver(params); //TODO: change this
                         break;
                       default:
                         info = { error: "Unknown action" };
