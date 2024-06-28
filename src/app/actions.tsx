@@ -95,7 +95,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
             data.delta.content?.map((part: any) => {
               if (part.type === "text") {
                 if (part.text) {
-                  textStream.append(part.text.value);
+                  textStream.update(part.text.value);
                 }
               }
             });
@@ -113,7 +113,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
                   if (name === "search_emails") {
                     const { query, has_attachments } = JSON.parse(args);
 
-                    gui.append(
+                    gui.update(
                       <div className="flex flex-row gap-2 items-center">
                         <div>
                           Searching for emails: {query}, has_attachments:
@@ -126,7 +126,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
 
                     const fakeEmails = searchEmails({ query, has_attachments });
 
-                    gui.append(
+                    gui.update(
                       <div className="flex flex-col gap-2">
                         {fakeEmails.map((email) => (
                           <div
@@ -149,7 +149,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
                   } else if (name === "get_weather") {
                     const location = JSON.parse(args) as string;
 
-                    gui.append(
+                    gui.update(
                       <div className="flex flex-row gap-2 items-center">
                         <div>Searching for weather: {location},</div>
                       </div>
@@ -159,7 +159,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
 
                     const weather = getWeatherReport(location);
 
-                    gui.append(
+                    gui.update(
                       <div className="flex flex-col gap-2">{weather}</div>
                     );
 

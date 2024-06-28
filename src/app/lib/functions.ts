@@ -91,6 +91,11 @@ export async function getNActiveDrivers({
   endDate: Date;
 }) {
   console.log("In GET N ACTIVE DRIVERS");
-  console.log(num_records, startDate, endDate);
+  console.log(num_records, startDate, endDate, role);
+  return true;
+}
+export async function isNumberBlocked(input: { phone_number: string }) {
+  console.log("In IS NUMBER BLOCKED");
+  console.log(input.phone_number);
   return true;
 }
