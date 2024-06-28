@@ -58,6 +58,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
         stream: true,
         thread:{
           messages: [{ role: 'user', content: userMessage }] ,
+          
         },
       });
 

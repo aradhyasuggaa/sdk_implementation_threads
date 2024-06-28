@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ClientMessage, submitMessage } from './actions';
+import { ClientMessage } from './actions';
 import { useActions } from 'ai/rsc';
 
 export default function Home() {
