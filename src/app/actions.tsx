@@ -7,6 +7,7 @@ import { ReactNode } from "react";
 import { getWeatherReport } from "./getWeather";
 import { Message } from "./message";
 import { searchEmails } from "./searchEmails";
+import { getUserId } from "./getUserId";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -150,6 +151,14 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
                     tool_outputs.push({
                       tool_call_id: toolCallId,
                       output: JSON.stringify(weather),
+                    });
+                  } else if (name === "get_user_id") {
+                    const { query, type } = JSON.parse(args);
+                    const userId = await getUserId({ query, type });
+
+                    tool_outputs.push({
+                      tool_call_id: toolCallId,
+                      output: JSON.stringify(userId),
                     });
                   }
                 }
