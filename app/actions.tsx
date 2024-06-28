@@ -73,7 +73,6 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
         for await (const delta of latestRun.run) {
           const { data, event } = delta;
           console.log('Event:', event); // Debugging log
-          console.log('Data:', data);   // Debugging log
           status.update(event);
 
           if (event === 'thread.created') {
@@ -89,7 +88,7 @@ export async function submitMessage(question: string): Promise<ClientMessage> {
               }
             });
           } else if (event === 'thread.run.requires_action') {
-  
+  console.log("F");
             if (data.required_action) {
               if (data.required_action.type === 'submit_tool_outputs') {
                 const { tool_calls } = data.required_action.submit_tool_outputs;
