@@ -78,18 +78,19 @@ export async function getNTopRefererrs({
   console.log(num_records, role, startDate, endDate);
   return true;
 }
-export async function getOnlineDrivers({
+
+export async function getNActiveDrivers({
   num_records = 3,
-  onDuty = true,
+  role = "saathi",
   startDate = new Date("2024-03-18"),
   endDate = new Date(),
 }: {
   num_records: number;
-  onDuty: boolean;
+  role: string;
   startDate: Date;
   endDate: Date;
 }) {
-  console.log("In GET ONLINE DRIVERS");
+  console.log("In GET N ACTIVE DRIVERS");
   console.log(num_records, startDate, endDate);
   return true;
 }
